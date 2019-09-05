@@ -1,0 +1,17 @@
+{
+  "name": "flyway-js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/mocha": "^5.2.7",
+    "@types/sequelize": "^4.28.4",
+    "mocha": "^6.2.0",
+    "pg": "^7.12.1",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.6.2"
+  },
+  "dependencies": {
+    "sequelize": "^5.18.1"
+  }
+}

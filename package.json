@@ -1,7 +1,7 @@
 {
   "name": "flyway-js",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "1.0.1",
+  "main": "dist/index.js",
   "license": "MIT",
   "devDependencies": {
     "@types/mocha": "^5.2.7",
@@ -13,5 +13,14 @@
   },
   "dependencies": {
     "sequelize": "^5.18.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:wanglihui/flyway-js.git"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "REAMD.md"
+  ]
 }

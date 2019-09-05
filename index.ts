@@ -4,16 +4,18 @@ import * as fs from 'fs';
 import * as sequelize from "sequelize";
 import {Models} from './models';
 import * as crypto from 'crypto';
+import {setForce} from "./flyway-js.model";
 
 export default class FlywayJs {
 
     public sequlize: Sequelize;
 
-    constructor(public connect: string, public scriptDir?: string) {
+    constructor(public connect: string, public scriptDir?: string, forceInit?: boolean) {
         this.sequlize = new Sequelize(connect);
         if (!scriptDir) {
             this.scriptDir = path.resolve(process.cwd(), 'sql');
         }
+        setForce(forceInit);
     }
 
     async run(ignores?: (RegExp|string)[]) {
@@ -95,7 +97,7 @@ export default class FlywayJs {
     }
 
     private async getFileHash(filepath: string) {
-        let content = fs.readFileSync(filepath)
+        let content = fs.readFileSync(filepath).toString();
         return crypto.createHash('md5').update(content.toString()).digest('hex');
     }
 

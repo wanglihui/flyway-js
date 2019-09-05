@@ -2,6 +2,10 @@ import {Sequelize, DataTypes} from "sequelize";
 import {Models} from "./models";
 import {Transaction} from "sequelize";
 
+let forceInit = false;
+export function setForce(force: boolean) {
+    forceInit = force;
+}
 
 export default async function (sequelize: Sequelize, _: Transaction) {
     const FlywayJsModel = sequelize.define('flyway_js', {
@@ -19,7 +23,7 @@ export default async function (sequelize: Sequelize, _: Transaction) {
     }, {
         timestamps: true
     });
-    await FlywayJsModel.sync({force: false});
+    await FlywayJsModel.sync({force: forceInit});
     Models.FlywayJsModel = FlywayJsModel;
     return FlywayJsModel;
 }

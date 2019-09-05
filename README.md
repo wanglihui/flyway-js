@@ -13,3 +13,14 @@
         await new FlywayJs(db_url, sql_dir).run();
     }
 ```
+
+### SQL文件或者js、ts文件要求
+
+- SQL文件 将获取SQL文件内容直接执行
+- TS或JS文件 将require 文件，执行默认导出函数，导出函数格式如下:
+
+````typescript
+export default function(db: Sequelize, t: sequelize.Transaction) {
+    //处理数据库逻辑，如果需要事务处理，可以将t传入到需要事务的地方。    
+}
+````

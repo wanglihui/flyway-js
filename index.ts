@@ -6,14 +6,21 @@ import {Models} from './models';
 import * as crypto from 'crypto';
 import {setForce} from "./flyway-js.model";
 
+export interface IFlywayOptions {
+    allowHashNotMatch: boolean
+}
+
 export default class FlywayJs {
 
     public sequlize: Sequelize;
 
-    constructor(public connect: string, public scriptDir?: string, forceInit?: boolean) {
+    constructor(public connect: string, public scriptDir?: string, forceInit?: boolean, public options?: IFlywayOptions) {
         this.sequlize = new Sequelize(connect);
         if (!scriptDir) {
             this.scriptDir = path.resolve(process.cwd(), 'sql');
+        }
+        if (!options) {
+            this.options = Object.assign({}, {allowHashNotMatch: false});
         }
         setForce(forceInit);
     }
@@ -88,7 +95,7 @@ export default class FlywayJs {
         let hash = await this.getFileHash(filepath);
         let flywayModel = await Models.FlywayJsModel.findOne({where: {filename: file}});
         if (flywayModel){
-            if (flywayModel.hash != hash && !/^R_/.test(file)) {
+            if (flywayModel.hash != hash && !/^R_/.test(file) && this.options.allowHashNotMatch === false) {
                 throw new Error(file+`hash conflict ${flywayModel.hash} != ${hash}`)
             }
             return true;

@@ -1,4 +1,4 @@
-import {Sequelize} from "sequelize";
+import {Sequelize, Transaction} from "sequelize";
 import * as path from 'path';
 import * as fs from 'fs';
 import * as sequelize from "sequelize";
@@ -38,10 +38,11 @@ export default class FlywayJs {
             }
             let filepath = path.resolve(this.scriptDir, file);
             //查找是否已经执行
-            if (await this.hasExec(file, filepath)) {
+            let t = await this.sequlize.transaction()
+
+            if (await this.hasExec(file, filepath, t)) {
                 continue;
             }
-            let t = await this.sequlize.transaction()
             //执行sql文件
             if (/\.sql$/.test(file)) {
                 await this.execSql(filepath, t);
@@ -91,9 +92,9 @@ export default class FlywayJs {
         return item.save({transaction: t});
     }
 
-    private async hasExec(file: string, filepath: string) :Promise<boolean> {
+    private async hasExec(file: string, filepath: string, t: Transaction) :Promise<boolean> {
         let hash = await this.getFileHash(filepath);
-        let flywayModel = await Models.FlywayJsModel.findOne({where: {filename: file}});
+        let flywayModel = await Models.FlywayJsModel.findOne({where: {filename: file}, transaction: t});
         if (flywayModel){
             if (flywayModel.hash != hash && !/^R_/.test(file) && this.options.allowHashNotMatch === false) {
                 throw new Error(file+`hash conflict ${flywayModel.hash} != ${hash}`)

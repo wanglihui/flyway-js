@@ -39,20 +39,25 @@ export default class FlywayJs {
             let filepath = path.resolve(this.scriptDir, file);
             //查找是否已经执行
             let t = await this.sequlize.transaction()
-
-            if (await this.hasExec(file, filepath, t)) {
-                continue;
+            try {
+                if (await this.hasExec(file, filepath, t)) {
+                    await t.commit()
+                    continue;
+                }
+                //执行sql文件
+                if (/\.sql$/.test(file)) {
+                    await this.execSql(filepath, t);
+                }
+                //执行js或者ts
+                if (/\.(js|ts)$/.test(file)) {
+                    await this.execJsOrTs(filepath, t);
+                }
+                await this.storeSqlExecLog(file, filepath, t);
+                await t.commit();
+            } catch(err) {
+                await t.rollback();
+                throw err;
             }
-            //执行sql文件
-            if (/\.sql$/.test(file)) {
-                await this.execSql(filepath, t);
-            }
-            //执行js或者ts
-            if (/\.(js|ts)$/.test(file)) {
-                await this.execJsOrTs(filepath, t);
-            }
-            await this.storeSqlExecLog(file, filepath, t);
-            await t.commit();
         }
     }
 

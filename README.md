@@ -33,6 +33,8 @@
 ### SQL文件或者js、ts文件要求
 
 - SQL文件 将获取SQL文件内容直接执行
+- SQL文件 会按文件名排序后执行——建议采用[flyway的脚本命名规范](https://flywaydb.org/documentation/migrations#sql-based-migrations)
+- SQL文件中以';'分隔多组SQL脚本；
 - TS或JS文件 将require 文件，执行默认导出函数，导出函数格式如下:
 
 ````typescript
@@ -43,6 +45,15 @@ export default function(db: Sequelize, t: sequelize.Transaction) {
 
 ### 测试 
 
+- 安装mocha
 ```
-    npx mocha
+$ npm i mocha -g
+```
+- 通过环境变量指明测试数据库
+```
+$ export DB_URL="mysql://127.0.0.1:3306/itp-flyway?user=root&password=root123098"
+```
+- 执行测试
+```
+npx mocha
 ```

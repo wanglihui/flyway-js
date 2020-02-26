@@ -12,6 +12,7 @@
     "typescript": "^3.6.2"
   },
   "dependencies": {
+    "mysql2": "^2.1.0",
     "sequelize": "^5.18.1"
   },
   "repository": {

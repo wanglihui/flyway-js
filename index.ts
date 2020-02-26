@@ -70,7 +70,26 @@ export default class FlywayJs {
 
     private async execSql(filepath: string, t: sequelize.Transaction) {
         let content = fs.readFileSync(filepath).toString();
-        await this.sequlize.query(content, {raw: true, transaction: t});
+        let arr = slipt2Array(content, ';', ';');
+        let index = 0 ;
+        for ( let s of arr ) {
+            await this.execOnePart(s, index, t);
+            index ++ ;
+        }
+    }
+
+    private execOnePart(s: string, index: number, t: sequelize.Transaction){
+        return new Promise(async (resolve, reject) => {
+            console.log('exec sql: ', index);
+            try {
+                await this.sequlize.query(s, {raw: true, transaction: t});
+            } catch (err) {
+                console.log('exec sql error ： ', err.message);
+                await t.rollback();
+                throw err;
+            }
+            resolve();
+        });
     }
 
     private async execJsOrTs(filepath: string, t: sequelize.Transaction) {
@@ -132,3 +151,34 @@ export default class FlywayJs {
         return ret;
     }
 }
+
+
+/**
+ * 将字符串分割为数组
+ * @param {string} str 字符串
+ * @param {string} splitter 分隔符，默认','
+ * @param {string} repair 尾补符号，分割后的字符串尾部增补符号，默认无尾补符号
+ */
+function slipt2Array( str, splitter, repair='' ){
+
+    if(! str ){
+        return [] ;
+    }
+
+    let temp = String(str). trim() ;
+
+    if(temp == "null"){
+        return [] ;
+    }
+
+    let arr = temp.split(!splitter?',':splitter);
+    let back = [] ;
+    arr.forEach((s,index) => {
+        if( s ){
+            back[index] = s + repair ;
+        }
+    })
+
+    return back ;
+}
+

@@ -1,18 +1,21 @@
-# flyway-js
+# flyway-nodejs
+
+Forked from [flyway-js](https://github.com/wanglihui/flyway-js)，做了功能优化
+- 支持SQL脚本中编写多组脚本
 
 用nodejs实现 类似与flyway更新数据库逻辑
 底层使用sequelize.js 执行数据库脚本，理论上sequlize支持的数据库都能使用
 
 ### 安装
 ```
-     yarn add flyway-js 
-     # 或者 npm i flyway-js -S
+     yarn add flyway-nodejs 
+     # 或者 npm i flyway-ndejs -S
 ```
 
 ### 使用
 
 ```typescript
-    import FlywayJs from "flywaj-js";
+    import FlywayJs from "flywaj-nodejs";
     //数据库连接
     const db_url = process.env.DB_URL;
     //SQL 或者 ts，js 路径 

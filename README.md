@@ -1,6 +1,4 @@
-# flyway-nodejs
-
-Forked from [flyway-js](https://github.com/wanglihui/flyway-js)
+# flyway-js
 
 做了如下功能优化：
 - 支持SQL脚本中编写多组脚本
@@ -11,14 +9,14 @@ Forked from [flyway-js](https://github.com/wanglihui/flyway-js)
 
 ## 安装
 ```
-     yarn add flyway-nodejs 
-     # 或者 npm i flyway-ndejs -S
+     yarn add flyway-js
+     # 或者 npm i flyway-js -S
 ```
 
 ## quick start
 
 ```typescript
-    import FlywayJs from "flywaj-nodejs";
+    import FlywayJs from "flywaj-js";
     //数据库连接
     const db_url = process.env.DB_URL;
     //SQL 或者 ts，js 路径 

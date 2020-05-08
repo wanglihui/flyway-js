@@ -7,7 +7,38 @@ import * as crypto from 'crypto';
 import {setForce} from "./flyway-js.model";
 
 export interface IFlywayOptions {
-    allowHashNotMatch: boolean
+    /**
+     * 是否检查脚本Hash
+     * false - 不检查
+     * true - 检查，修改过已执行的脚本，将不能执行flyway
+     */
+    allowHashNotMatch: boolean,
+    /**
+     * baseline 以指定脚本之为基准建立数据库版本
+     *
+     * 如，工程中有脚本：
+     * V001__t.sql
+     * V002__t.sql
+     * V003__t.sql
+     * 如果指定了baseline=V002__t.sql
+     * 在执行run()时，会忽略包括V001,V002两个文件，只执行V003。但是所有脚本都会记录到flyway_js表
+     *
+     * 默认为空，会从第一个脚本开始执行，建立数据库版本。
+     * 注意，baseline只在首次创建flyway_js表时有效；
+     */
+    baseline: string
+}
+
+/**
+ * 脚本文件信息
+ */
+class ScriptFile {
+    script : string ;
+    isBaseline : boolean = false ;
+    constructor(fileName, isBaseline) {
+        this.script = fileName ;
+        this.isBaseline = isBaseline ;
+    }
 }
 
 export default class FlywayJs {
@@ -20,7 +51,7 @@ export default class FlywayJs {
             this.scriptDir = path.resolve(process.cwd(), 'sql');
         }
         if (!options) {
-            this.options = Object.assign({}, {allowHashNotMatch: false});
+            this.options = Object.assign({}, {allowHashNotMatch: false, baseline: ""});
         }
         setForce(forceInit);
     }
@@ -29,36 +60,62 @@ export default class FlywayJs {
         if (!fs.existsSync(this.scriptDir)) {
             return;
         }
+
+        let scriptFiles = await this.scriptFile() ;
         await this.prepare();
-        let files = fs.readdirSync(this.scriptDir);
-        files.sort();
-        for(let file of files) {
-            if (this.isNeedIgnore(file, ignores)) {
+        for(let file of scriptFiles) {
+            if (this.isNeedIgnore(file.script, ignores)) {
                 continue;
             }
-            let filepath = path.resolve(this.scriptDir, file);
+            let filepath = path.resolve(this.scriptDir, file.script);
             //查找是否已经执行
             let t = await this.sequlize.transaction()
             try {
-                if (await this.hasExec(file, filepath, t)) {
+                if (await this.hasExec(file.script, filepath, t)) {
                     await t.commit()
                     continue;
                 }
-                //执行sql文件
-                if (/\.sql$/.test(file)) {
-                    await this.execSql(filepath, t);
+                if( !file.isBaseline){
+                    console.log('need exec script file: ', file.script)
+                    //执行sql文件
+                    if (/\.sql$/.test(file.script)) {
+                        await this.execSql(filepath, t);
+                    }
+                    //执行js或者ts
+                    if (/\.(js|ts)$/.test(file.script)) {
+                        await this.execJsOrTs(filepath, t);
+                    }
+                }else{
+                    console.log('baseline script file: ', file.script)
                 }
-                //执行js或者ts
-                if (/\.(js|ts)$/.test(file)) {
-                    await this.execJsOrTs(filepath, t);
-                }
-                await this.storeSqlExecLog(file, filepath, t);
+                await this.storeSqlExecLog(file.script, filepath, t);
                 await t.commit();
             } catch(err) {
                 await t.rollback();
                 throw err;
             }
         }
+    }
+
+    private async scriptFile(){
+
+        let files = fs.readdirSync(this.scriptDir);
+        files.sort();
+        // 获取基准脚本的位置
+        let local = files.indexOf(this.options.baseline) ;
+        let scriptFiles = new Array<ScriptFile>() ;
+        files.forEach((file, index) =>{
+            if(index <= local ){
+                // 基准脚本和基准脚本之前的脚本都执行
+                scriptFiles.push(new ScriptFile(file, true)) ;
+            } else{
+                scriptFiles.push(new ScriptFile(file, false)) ;
+            }
+        })
+        scriptFiles.forEach(s=>{
+            console.log( s )
+        })
+        return scriptFiles ;
     }
 
     //创建flywayjs使用的数据表
@@ -70,7 +127,26 @@ export default class FlywayJs {
 
     private async execSql(filepath: string, t: sequelize.Transaction) {
         let content = fs.readFileSync(filepath).toString();
-        await this.sequlize.query(content, {raw: true, transaction: t});
+        let arr = slipt2Array(content, ';', ';');
+        let index = 0 ;
+        for ( let s of arr ) {
+            await this.execOnePart(s, index, t);
+            index ++ ;
+        }
+    }
+
+    private execOnePart(s: string, index: number, t: sequelize.Transaction){
+        return new Promise(async (resolve, reject) => {
+            console.log('exec sql: ', index);
+            try {
+                await this.sequlize.query(s, {raw: true, transaction: t});
+            } catch (err) {
+                console.log('exec sql error ： ', err.message);
+                await t.rollback();
+                throw err;
+            }
+            resolve();
+        });
     }
 
     private async execJsOrTs(filepath: string, t: sequelize.Transaction) {
@@ -132,3 +208,34 @@ export default class FlywayJs {
         return ret;
     }
 }
+
+
+/**
+ * 将字符串分割为数组
+ * @param {string} str 字符串
+ * @param {string} splitter 分隔符，默认','
+ * @param {string} repair 尾补符号，分割后的字符串尾部增补符号，默认无尾补符号
+ */
+function slipt2Array( str, splitter, repair='' ){
+
+    if(! str ){
+        return [] ;
+    }
+
+    let temp = String(str).trim() ;
+
+    if(temp == "null"){
+        return [] ;
+    }
+
+    let arr = temp.split(!splitter?',':splitter);
+    let back = [] ;
+    arr.forEach((s,index) => {
+        if( s ){
+            back[index] = s.trim() + repair ;
+        }
+    })
+
+    return back ;
+}
+

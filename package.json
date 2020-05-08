@@ -1,6 +1,6 @@
 {
-  "name": "flyway-js",
-  "version": "1.0.6",
+  "name": "flyway-nodejs",
+  "version": "1.1.0",
   "main": "dist/index.js",
   "license": "MIT",
   "devDependencies": {
@@ -12,11 +12,12 @@
     "typescript": "^3.6.2"
   },
   "dependencies": {
+    "mysql2": "^2.1.0",
     "sequelize": "^5.18.1"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:wanglihui/flyway-js.git"
+    "url": "git@github.com:shiyunlai/flyway-js.git"
   },
   "files": [
     "dist",

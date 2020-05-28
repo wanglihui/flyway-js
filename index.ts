@@ -12,7 +12,7 @@ export interface IFlywayOptions {
      * false - 不检查
      * true - 检查，修改过已执行的脚本，将不能执行flyway
      */
-    allowHashNotMatch: boolean,
+    allowHashNotMatch?: boolean,
     /**
      * baseline 以指定脚本之为基准建立数据库版本
      *
@@ -26,7 +26,7 @@ export interface IFlywayOptions {
      * 默认为空，会从第一个脚本开始执行，建立数据库版本。
      * 注意，baseline只在首次创建flyway_js表时有效；
      */
-    baseline: string
+    baseline?: string
 }
 
 /**

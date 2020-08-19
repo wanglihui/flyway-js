@@ -46,7 +46,12 @@ export default class FlywayJs {
     public sequlize: Sequelize;
 
     constructor(public connect: string, public scriptDir?: string, forceInit?: boolean, public options?: IFlywayOptions) {
-        this.sequlize = new Sequelize(connect);
+        this.sequlize = new Sequelize(connect, {
+            dialectOptions: {
+                statement_timeout: 10 * 1000,
+                connectTimeout: 10 * 1000
+            }
+        });
         if (!scriptDir) {
             this.scriptDir = path.resolve(process.cwd(), 'sql');
         }
